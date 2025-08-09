@@ -1,3 +1,6 @@
+## 사이트 주소 : https://xbelugazx.github.io/word-chain-game/
+
+
 🎮 실시간 끝말잇기 게임 (Real-time Word Chain Game)
 친구와 함께 실시간으로 즐길 수 있는 웹 기반 끝말잇기 게임입니다. Firebase를 이용해 실시간 데이터 동기화를 구현했으며, Gemini API를 활용한 AI 힌트 기능을 통해 게임의 재미를 더했습니다.
 
