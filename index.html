@@ -76,7 +76,7 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <button id="forfeit-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300">항복</button>
-                    <button id="reset-game-btn" class="w-full bg-yellow-500 text-yellow-800 font-bold py-3 rounded-lg hover:bg-yellow-600">게임 초기화</button>
+                    <button id="reset-game-btn" class="w-full bg-yellow-500 text-yellow-800 font-bold py-3 rounded-lg hover:bg-yellow-600">다시 하기</button>
                 </div>
             </div>
         </div>
@@ -339,14 +339,19 @@
                 const winnerNickname = players[winner.uid]?.nickname;
                 allDOMElements.turnInfoEl.textContent = `${winnerNickname}님의 승리! (${winner.reason})`;
                 allDOMElements.lastWordEl.textContent = "게임 종료";
-                Object.values(allDOMElements).forEach(el => { if(el.disabled !== undefined) el.disabled = true; });
-                allDOMElements.leaveRoomBtn.disabled = false;
+                allDOMElements.wordInput.disabled = true;
+                allDOMElements.sendBtn.disabled = true;
+                allDOMElements.forfeitBtn.disabled = true;
+                allDOMElements.resetGameBtn.disabled = !(creatorUid === userId); // 방장만 다시하기 활성화
+                allDOMElements.resetGameBtn.textContent = "다시 하기";
                 return;
             }
 
             const currentPlayerNickname = players[currentPlayerUid]?.nickname;
             allDOMElements.forfeitBtn.disabled = false;
-            allDOMElements.resetGameBtn.disabled = false;
+            allDOMElements.resetGameBtn.disabled = true; // 게임 중에는 초기화 비활성화
+            allDOMElements.resetGameBtn.textContent = "게임 초기화";
+
             if (words.length === 0) {
                 allDOMElements.lastWordEl.textContent = "게임 시작!";
                 allDOMElements.turnInfoEl.textContent = isMyTurn ? `${players[userId].nickname}님, 첫 단어를 제시해주세요!` : `${currentPlayerNickname}님이 첫 단어를 제시합니다...`;
@@ -415,6 +420,11 @@
                     allDOMElements.sendBtn.disabled = false;
                     return alert("이미 사용된 단어입니다.");
                 }
+                const isValidWord = await isRealWord(word);
+                if (!isValidWord) {
+                    allDOMElements.sendBtn.disabled = false;
+                    return alert(`'${word}'는 사전에 없는 단어입니다.`);
+                }
 
                 const currentIndex = turnOrder.indexOf(userId);
                 const nextIndex = (currentIndex + 1) % turnOrder.length;
@@ -429,6 +439,20 @@
                 allDOMElements.wordInput.value = '';
             }
             allDOMElements.sendBtn.disabled = false;
+        }
+
+        async function isRealWord(word) {
+            const prompt = `'${word}'가 표준국어대사전에 등재된 한글 명사가 맞는지 '예' 또는 '아니오'로만 대답해줘.`;
+            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) return true;
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                return text && text.includes('예');
+            } catch (error) { console.error("Word validation error:", error); return true; }
         }
 
         allDOMElements.openCreateRoomModalBtn.addEventListener('click', () => allDOMElements.createRoomModal.classList.remove('hidden'));
@@ -494,20 +518,23 @@
         });
         
         allDOMElements.resetGameBtn.addEventListener('click', async () => {
-            if (confirm("게임을 초기화하시겠습니까?")) {
-                 const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
-                 const gameDoc = await getDoc(gameDocRef);
-                 if(gameDoc.exists()){
-                    const gameData = gameDoc.data();
-                    const playerIds = Object.keys(gameData.players);
-                    const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
-                    await updateDoc(gameDocRef, {
-                        words: [], lastWord: "", status: 'playing',
-                        turnOrder: shuffledPlayerIds,
-                        currentPlayerUid: shuffledPlayerIds[0],
-                        turnStartTime: serverTimestamp()
-                    });
-                 }
+            const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
+            const gameDoc = await getDoc(gameDocRef);
+            if(gameDoc.exists()){
+                const gameData = gameDoc.data();
+                if (gameData.creatorUid !== userId) return alert("방장만 게임을 다시 시작할 수 있습니다.");
+                if (gameData.status !== 'finished') {
+                    if (!confirm("게임이 진행중입니다. 정말로 초기화하시겠습니까?")) return;
+                }
+                const playerIds = Object.keys(gameData.players);
+                const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
+                await updateDoc(gameDocRef, {
+                    words: [], lastWord: "", status: 'playing',
+                    turnOrder: shuffledPlayerIds,
+                    currentPlayerUid: shuffledPlayerIds[0],
+                    turnStartTime: serverTimestamp(),
+                    winner: null
+                });
             }
         });
 
