@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>실시간 끝말잇기 (AI 힌트 ✨)</title>
+    <title>실시간 끝말잇기 게임</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter & Noto Sans KR -->
@@ -33,9 +33,7 @@
                 <p class="text-center text-gray-500">참여할 방을 선택하거나 새 방을 만드세요.</p>
             </div>
             <div class="flex-grow bg-gray-50 rounded-lg p-4 overflow-y-auto custom-scrollbar border">
-                <div id="public-rooms-list" class="space-y-2">
-                    <!-- 공개 방 목록이 여기에 표시됩니다. -->
-                </div>
+                <div id="public-rooms-list" class="space-y-2"></div>
             </div>
             <div class="flex-shrink-0 mt-4">
                 <button id="open-create-room-modal-btn" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg hover:bg-green-600 transition text-lg">새 방 만들기</button>
@@ -49,103 +47,93 @@
                 <div class="flex justify-between items-center">
                     <button id="leave-room-btn" class="text-sm text-gray-500 hover:text-gray-800">← 로비로 돌아가기</button>
                     <p id="room-name-display" class="text-2xl font-semibold text-indigo-600"></p>
-                    <!-- 방 폭파 버튼 (방장에게만 보임) -->
                     <button id="delete-room-btn" class="hidden text-sm bg-red-100 text-red-700 px-3 py-1 rounded-md hover:bg-red-200">방 폭파</button>
                 </div>
-                <div id="game-info" class="p-4 bg-gray-50 rounded-lg text-center">
-                    <p class="text-lg">제시어: <span id="last-word" class="text-4xl font-bold text-blue-600"></span></p>
-                    <p id="turn-info" class="text-xl font-medium text-gray-700 h-8"></p>
+                <div class="flex space-x-4">
+                    <div id="game-info" class="flex-1 p-4 bg-gray-50 rounded-lg text-center">
+                        <div class="flex justify-center items-center space-x-4">
+                             <p class="text-lg">제시어: <span id="last-word" class="text-4xl font-bold text-blue-600"></span></p>
+                             <div class="text-lg">남은 시간: <span id="timer-display" class="text-4xl font-bold text-red-500">30</span></div>
+                        </div>
+                        <p id="turn-info" class="text-xl font-medium text-gray-700 h-8 mt-2"></p>
+                    </div>
+                    <div class="w-1/3 p-4 bg-gray-50 rounded-lg">
+                        <h3 class="font-bold text-center mb-2 text-gray-700">참가자</h3>
+                        <ul id="player-list" class="space-y-1"></ul>
+                    </div>
                 </div>
             </div>
             
-            <!-- 단어 기록 (스크롤 영역) -->
-            <div id="word-history" class="flex-grow p-4 bg-gray-100 rounded-lg border border-gray-200 overflow-y-auto custom-scrollbar min-h-0">
+            <div id="word-history" class="flex-grow p-4 bg-gray-100 rounded-lg border overflow-y-auto custom-scrollbar min-h-0">
                 <ul id="word-list" class="space-y-3"></ul>
             </div>
             
-            <!-- 하단 입력부 -->
             <div class="flex-shrink-0 space-y-3">
-                <div id="hint-display" class="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
-                    <p class="text-base text-gray-600">✨ AI 추천 단어: <span id="hint-word" class="font-bold text-yellow-800"></span></p>
-                </div>
+                 <button id="start-game-btn" class="hidden w-full bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600">게임 시작</button>
                 <div class="flex items-center space-x-3">
-                    <input type="text" id="word-input" placeholder="단어를 입력..." class="flex-grow w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-lg" disabled>
-                    <button id="hint-btn" class="bg-yellow-400 text-white font-bold p-3 rounded-lg hover:bg-yellow-500 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center" disabled>
-                        <span id="hint-btn-text" class="text-2xl">✨</span>
-                    </button>
-                    <button id="send-btn" class="bg-blue-500 text-white font-bold px-6 py-3 rounded-lg hover:bg-blue-600 transition disabled:bg-gray-400 disabled:cursor-not-allowed text-lg">전송</button>
+                    <input type="text" id="word-input" placeholder="단어를 입력..." class="flex-grow w-full px-4 py-3 border rounded-lg text-lg" disabled>
+                    <button id="send-btn" class="bg-blue-500 text-white font-bold px-6 py-3 rounded-lg text-lg" disabled>전송</button>
                 </div>
-                 <button id="reset-game-btn" class="w-full bg-yellow-500 text-yellow-800 font-bold py-3 rounded-lg hover:bg-yellow-600 transition text-base">게임 초기화</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button id="forfeit-btn" class="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-lg hover:bg-gray-300">항복</button>
+                    <button id="reset-game-btn" class="w-full bg-yellow-500 text-yellow-800 font-bold py-3 rounded-lg hover:bg-yellow-600">게임 초기화</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- 방 만들기 모달 -->
-    <div id="create-room-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+    <!-- 모달 -->
+    <div id="create-room-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md space-y-4">
             <h2 class="text-2xl font-bold">새 방 만들기</h2>
-            <input type="text" id="nickname-input" placeholder="사용할 닉네임을 입력하세요" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
-            <input type="text" id="room-name-input" placeholder="방 이름을 입력하세요" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
+            <input type="text" id="nickname-input" placeholder="닉네임" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
+            <input type="text" id="room-name-input" placeholder="방 이름" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
             <input type="password" id="password-input" placeholder="비밀번호 (없으면 공개 방)" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
+            <div>
+                <label for="max-players-input" class="text-sm font-medium text-gray-700">최대 인원 (2~10명)</label>
+                <input type="number" id="max-players-input" value="4" min="2" max="10" class="w-full mt-1 px-4 py-3 border rounded-lg bg-white">
+            </div>
             <div class="flex justify-end space-x-4">
-                <button id="cancel-create-btn" class="px-4 py-2 rounded text-gray-600 hover:bg-gray-100">취소</button>
+                <button id="cancel-create-btn" class="px-4 py-2 rounded hover:bg-gray-100">취소</button>
                 <button id="confirm-create-btn" class="px-4 py-2 rounded bg-green-500 text-white hover:bg-green-600">만들기</button>
             </div>
         </div>
     </div>
-    
-    <!-- 비밀번호 입력 모달 -->
     <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md space-y-4">
             <h2 class="text-2xl font-bold">비밀번호 입력</h2>
-            <p>이 방에 참여하려면 비밀번호가 필요합니다.</p>
-            <input type="text" id="join-nickname-input" placeholder="사용할 닉네임을 입력하세요" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
-            <input type="password" id="join-password-input" placeholder="비밀번호를 입력하세요" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
+            <input type="text" id="join-nickname-input" placeholder="닉네임" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
+            <input type="password" id="join-password-input" placeholder="비밀번호" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
             <div class="flex justify-end space-x-4">
-                <button id="cancel-join-btn" class="px-4 py-2 rounded text-gray-600 hover:bg-gray-100">취소</button>
+                <button id="cancel-join-btn" class="px-4 py-2 rounded hover:bg-gray-100">취소</button>
                 <button id="confirm-join-btn" class="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600">참여하기</button>
             </div>
         </div>
     </div>
 
-
-    <!-- Firebase & Gemini Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, updateDoc, collection, query, where, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- DOM 요소 ---
-        const loadingScreen = document.getElementById('loading-screen');
-        const lobbyScreen = document.getElementById('lobby-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const publicRoomsList = document.getElementById('public-rooms-list');
-        const openCreateRoomModalBtn = document.getElementById('open-create-room-modal-btn');
-        const leaveRoomBtn = document.getElementById('leave-room-btn');
-        const deleteRoomBtn = document.getElementById('delete-room-btn');
-        // 모달 요소
-        const createRoomModal = document.getElementById('create-room-modal');
-        const passwordModal = document.getElementById('password-modal');
-        const nicknameInput = document.getElementById('nickname-input');
-        const roomNameInput = document.getElementById('room-name-input');
-        const passwordInput = document.getElementById('password-input');
-        const cancelCreateBtn = document.getElementById('cancel-create-btn');
-        const confirmCreateBtn = document.getElementById('confirm-create-btn');
-        const joinNicknameInput = document.getElementById('join-nickname-input');
-        const joinPasswordInput = document.getElementById('join-password-input');
-        const cancelJoinBtn = document.getElementById('cancel-join-btn');
-        const confirmJoinBtn = document.getElementById('confirm-join-btn');
-        // 게임 화면 요소
-        const roomNameDisplay = document.getElementById('room-name-display');
-        const lastWordEl = document.getElementById('last-word');
-        const turnInfoEl = document.getElementById('turn-info');
-        const wordListEl = document.getElementById('word-list');
-        const wordInput = document.getElementById('word-input');
-        const sendBtn = document.getElementById('send-btn');
-        const resetGameBtn = document.getElementById('reset-game-btn');
-        const hintBtn = document.getElementById('hint-btn');
+        const allDOMElements = {
+            loadingScreen: document.getElementById('loading-screen'), lobbyScreen: document.getElementById('lobby-screen'), gameScreen: document.getElementById('game-screen'),
+            publicRoomsList: document.getElementById('public-rooms-list'), openCreateRoomModalBtn: document.getElementById('open-create-room-modal-btn'),
+            leaveRoomBtn: document.getElementById('leave-room-btn'), deleteRoomBtn: document.getElementById('delete-room-btn'),
+            createRoomModal: document.getElementById('create-room-modal'), passwordModal: document.getElementById('password-modal'),
+            nicknameInput: document.getElementById('nickname-input'), roomNameInput: document.getElementById('room-name-input'), passwordInput: document.getElementById('password-input'),
+            maxPlayersInput: document.getElementById('max-players-input'),
+            cancelCreateBtn: document.getElementById('cancel-create-btn'), confirmCreateBtn: document.getElementById('confirm-create-btn'),
+            joinNicknameInput: document.getElementById('join-nickname-input'), joinPasswordInput: document.getElementById('join-password-input'),
+            cancelJoinBtn: document.getElementById('cancel-join-btn'), confirmJoinBtn: document.getElementById('confirm-join-btn'),
+            roomNameDisplay: document.getElementById('room-name-display'), lastWordEl: document.getElementById('last-word'),
+            turnInfoEl: document.getElementById('turn-info'), timerDisplay: document.getElementById('timer-display'),
+            wordListEl: document.getElementById('word-list'), wordInput: document.getElementById('word-input'),
+            sendBtn: document.getElementById('send-btn'), resetGameBtn: document.getElementById('reset-game-btn'),
+            forfeitBtn: document.getElementById('forfeit-btn'), playerList: document.getElementById('player-list'),
+            startGameBtn: document.getElementById('start-game-btn'),
+        };
 
-        // --- Firebase 설정 ---
         const firebaseConfig = {
           apiKey: "AIzaSyC4NyJ4kTK4VTrFBaIWsBUWtcaSK21KBBg",
           authDomain: "my-word-game-510f9.firebaseapp.com",
@@ -156,52 +144,47 @@
         };
         const appId = firebaseConfig.projectId;
         let app, db, auth, userId, currentGameId;
-        let unsubscribeGame = null;
-        let unsubscribeRooms = null;
+        let unsubscribeGame = null, unsubscribeRooms = null, timerInterval = null;
 
-        // --- 메인 로직 ---
+        const TURN_DURATION = 30;
+        const dueumMap = { '라': '나', '락': '낙', '란': '난', '랄': '날', '람': '남', '랍': '납', '랑': '낭', '래': '내', '랭': '냉', '량': '양', '려': '여', '력': '역', '련': '연', '렬': '열', '렴': '염', '렵': '엽', '령': '영', '례': '예', '로': '노', '록': '녹', '론': '논', '롱': '농', '뢰': '뇌', '료': '요', '룡': '용', '루': '누', '뉴': '유', '니': '이', '녀': '여', '뇨': '요', '뉴': '유', '니': '이' };
+
         async function main() {
             try {
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
                 onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        showLobby();
-                    } else {
-                        signInAnonymously(auth);
-                    }
+                    if (user) { userId = user.uid; showLobby(); } else { signInAnonymously(auth); }
                 });
             } catch (error) {
                 console.error("Firebase 초기화 오류:", error);
-                loadingScreen.textContent = "오류가 발생했습니다.";
+                allDOMElements.loadingScreen.textContent = "오류가 발생했습니다.";
             }
         }
 
         function showLobby() {
-            loadingScreen.classList.add('hidden');
-            gameScreen.classList.add('hidden');
-            lobbyScreen.classList.remove('hidden');
+            allDOMElements.loadingScreen.classList.add('hidden');
+            allDOMElements.gameScreen.classList.add('hidden');
+            allDOMElements.lobbyScreen.classList.remove('hidden');
             listenToPublicRooms();
         }
 
         function showGame(roomId) {
-            lobbyScreen.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            roomNameDisplay.textContent = roomId;
+            allDOMElements.lobbyScreen.classList.add('hidden');
+            allDOMElements.gameScreen.classList.remove('hidden');
+            allDOMElements.roomNameDisplay.textContent = roomId;
         }
 
-        // --- 공개 방 목록 실시간 감지 (로직 수정) ---
         function listenToPublicRooms() {
             if (unsubscribeRooms) unsubscribeRooms();
             const roomsRef = collection(db, `artifacts/${appId}/public/data/games`);
             const q = query(roomsRef, where("status", "==", "waiting"));
 
             unsubscribeRooms = onSnapshot(q, (querySnapshot) => {
-                publicRoomsList.innerHTML = '';
+                allDOMElements.publicRoomsList.innerHTML = '';
                 if (querySnapshot.empty) {
-                    publicRoomsList.innerHTML = `<p class="text-gray-500 text-center">참여할 수 있는 방이 없습니다. 새 방을 만들어보세요!</p>`;
+                    allDOMElements.publicRoomsList.innerHTML = `<p class="text-gray-500 text-center">참여할 수 있는 방이 없습니다.</p>`;
                 }
                 querySnapshot.forEach((doc) => {
                     const room = doc.data();
@@ -213,87 +196,65 @@
                     roomEl.innerHTML = `
                         <div>
                             <p class="font-bold text-lg">${doc.id}</p>
-                            <p class="text-sm text-gray-600">${Object.keys(room.players).length} / 2 명</p>
+                            <p class="text-sm text-gray-600">${Object.keys(room.players).length} / ${room.maxPlayers} 명</p>
                         </div>
                         ${room.password ? '<span>🔒</span>' : ''}
                     `;
-                    publicRoomsList.appendChild(roomEl);
+                    allDOMElements.publicRoomsList.appendChild(roomEl);
                 });
             });
         }
 
-        // --- 방 만들기 및 참여 로직 ---
-        async function createRoom(nickname, roomName, password) {
-            if (!nickname || !roomName) {
-                alert("닉네임과 방 이름을 모두 입력해주세요.");
-                return;
-            }
+        async function createRoom(nickname, roomName, password, maxPlayers) {
+            if (!nickname || !roomName) return alert("닉네임과 방 이름을 모두 입력해주세요.");
             const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, roomName);
-            const docSnap = await getDoc(gameDocRef);
-
-            if (docSnap.exists()) {
-                alert("이미 존재하는 방 이름입니다. 다른 이름을 사용해주세요.");
-                return;
-            }
+            if ((await getDoc(gameDocRef)).exists()) return alert("이미 존재하는 방 이름입니다.");
 
             await setDoc(gameDocRef, {
-                creatorUid: userId,
-                players: { [userId]: { nickname } },
-                words: [],
-                lastWord: "",
-                currentPlayerUid: userId,
-                status: 'waiting',
-                isPublic: !password,
-                password: password || null,
-                createdAt: new Date()
+                creatorUid: userId, players: { [userId]: { nickname } },
+                words: [], lastWord: "", currentPlayerUid: null, turnOrder: [],
+                status: 'waiting', isPublic: !password, password: password || null,
+                turnStartTime: serverTimestamp(), maxPlayers: parseInt(maxPlayers, 10),
             });
-
             startListeningToGame(gameDocRef, roomName);
         }
 
         async function joinRoom(roomId, nickname, passwordAttempt = null) {
             const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, roomId);
             const docSnap = await getDoc(gameDocRef);
-
-            if (!docSnap.exists()) {
-                alert("존재하지 않는 방입니다.");
-                return;
-            }
+            if (!docSnap.exists()) return alert("존재하지 않는 방입니다.");
 
             const gameData = docSnap.data();
-            if (gameData.password && gameData.password !== passwordAttempt) {
-                alert("비밀번호가 틀렸습니다.");
-                return;
-            }
+            if (gameData.password && gameData.password !== passwordAttempt) return alert("비밀번호가 틀렸습니다.");
             
-            if (Object.keys(gameData.players).length >= 2 && !gameData.players[userId]) {
-                alert("방이 가득 찼습니다.");
-                return;
-            }
+            const playerCount = Object.keys(gameData.players).length;
+            if (playerCount >= gameData.maxPlayers && !gameData.players[userId]) return alert("방이 가득 찼습니다.");
             
-            const updateData = {
-                [`players.${userId}`]: { nickname },
-                status: 'playing'
-            };
-            await updateDoc(gameDocRef, updateData);
+            const updateData = { [`players.${userId}`]: { nickname } };
+            const newPlayerCount = playerCount + 1;
 
-            passwordModal.classList.add('hidden');
+            if (newPlayerCount === gameData.maxPlayers) {
+                const playerIds = [...Object.keys(gameData.players), userId];
+                const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
+                updateData.status = 'playing';
+                updateData.turnOrder = shuffledPlayerIds;
+                updateData.currentPlayerUid = shuffledPlayerIds[0];
+                updateData.turnStartTime = serverTimestamp();
+            }
+            
+            await updateDoc(gameDocRef, updateData);
+            allDOMElements.passwordModal.classList.add('hidden');
             startListeningToGame(gameDocRef, roomId);
         }
 
         function startListeningToGame(gameDocRef, roomId) {
             if (unsubscribeRooms) unsubscribeRooms();
             if (unsubscribeGame) unsubscribeGame();
-            
             currentGameId = roomId;
 
             unsubscribeGame = onSnapshot(gameDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    updateUI(docSnap.data());
-                } else {
-                    alert("방이 삭제되었습니다. 로비로 돌아갑니다.");
-                    leaveRoom(true); // 방이 외부에서 삭제된 경우
-                }
+                if (docSnap.exists()) { updateUI(docSnap.data()); } 
+                else { alert("방이 삭제되었습니다."); leaveRoom(true); }
             });
             showGame(roomId);
         }
@@ -303,171 +264,264 @@
             if (unsubscribeGame) unsubscribeGame();
             unsubscribeGame = null;
             currentGameId = null;
+            if (timerInterval) clearInterval(timerInterval);
             
             if (roomId && !isKicked) {
                 try {
                     const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, roomId);
                     const docSnap = await getDoc(gameDocRef);
-
                     if (docSnap.exists()) {
                         const gameData = docSnap.data();
-                        const players = gameData.players;
-
+                        const { players, turnOrder, creatorUid, currentPlayerUid } = gameData;
+                        const leavingPlayerIndex = turnOrder.indexOf(userId);
+                        
                         delete players[userId];
+                        const newTurnOrder = turnOrder.filter(p => p !== userId);
 
-                        if (Object.keys(players).length === 0 || gameData.creatorUid === userId) {
+                        if (Object.keys(players).length === 0) {
                             await deleteDoc(gameDocRef);
                         } else {
-                            await updateDoc(gameDocRef, {
-                                players: players,
-                                status: 'waiting',
-                                words: [],
-                                lastWord: "",
-                                currentPlayerUid: Object.keys(players)[0] // 남은 플레이어에게 턴 넘김
+                            let nextPlayerUid = currentPlayerUid;
+                            if (currentPlayerUid === userId && newTurnOrder.length > 0) {
+                                nextPlayerUid = newTurnOrder[leavingPlayerIndex % newTurnOrder.length];
+                            }
+                            await updateDoc(gameDocRef, { 
+                                players, 
+                                turnOrder: newTurnOrder,
+                                status: 'waiting', 
+                                words: [], 
+                                lastWord: "", 
+                                currentPlayerUid: nextPlayerUid
                             });
                         }
                     }
-                } catch (error) {
-                    console.error("Error leaving room:", error);
-                }
+                } catch (error) { console.error("Error leaving room:", error); }
             }
-            
             showLobby();
         }
 
-        // --- UI 업데이트 ---
         function updateUI(gameData) {
             if (!gameData) return;
-            const { players, currentPlayerUid, words, lastWord, status, creatorUid } = gameData;
-            const isMyTurn = currentPlayerUid === userId;
-            const isGameFull = Object.keys(players).length === 2;
+            const { players, currentPlayerUid, words, lastWord, status, creatorUid, turnOrder, turnStartTime, winner, maxPlayers } = gameData;
             
-            // 방장인 경우 방 폭파 버튼 표시
-            if (creatorUid === userId) {
-                deleteRoomBtn.classList.remove('hidden');
-            } else {
-                deleteRoomBtn.classList.add('hidden');
-            }
+            allDOMElements.deleteRoomBtn.classList.toggle('hidden', creatorUid !== userId);
+            updatePlayerList(players, turnOrder, currentPlayerUid);
 
-            wordListEl.innerHTML = '';
+            const canStart = creatorUid === userId && Object.keys(players).length >= 2;
+            allDOMElements.startGameBtn.classList.toggle('hidden', !canStart || status === 'playing');
+
+            if (status === 'waiting') {
+                allDOMElements.turnInfoEl.textContent = `상대방을 기다리는 중입니다... (${Object.keys(players).length}/${maxPlayers})`;
+                allDOMElements.lastWordEl.textContent = "대기중";
+                allDOMElements.timerDisplay.textContent = TURN_DURATION;
+                allDOMElements.wordInput.disabled = true;
+                allDOMElements.sendBtn.disabled = true;
+                allDOMElements.forfeitBtn.disabled = true;
+                allDOMElements.resetGameBtn.disabled = true;
+                return;
+            }
+            
+            const isMyTurn = currentPlayerUid === userId;
+            allDOMElements.wordListEl.innerHTML = '';
             words.forEach(item => {
                 const li = document.createElement('li');
                 const nickname = players[item.player]?.nickname || '알수없음';
                 const isMyMessage = item.player === userId;
                 li.className = `p-3 rounded-lg ${isMyMessage ? 'bg-blue-50 text-right' : 'bg-green-50 text-left'}`;
                 li.innerHTML = `<span class="font-bold ${isMyMessage ? 'text-blue-600' : 'text-green-600'}">${nickname}</span>: <span class="text-xl text-gray-800">${item.word}</span>`;
-                wordListEl.appendChild(li);
+                allDOMElements.wordListEl.appendChild(li);
             });
-            if (wordListEl.scrollHeight > wordListEl.clientHeight) {
-                wordListEl.scrollTop = wordListEl.scrollHeight;
-            }
+            allDOMElements.wordListEl.scrollTop = allDOMElements.wordListEl.scrollHeight;
             
-            const currentPlayerNickname = players[currentPlayerUid]?.nickname;
+            if (timerInterval) clearInterval(timerInterval);
 
-            if (status === 'waiting' && !isGameFull) {
-                turnInfoEl.textContent = "상대방을 기다리는 중입니다...";
-                lastWordEl.textContent = "대기중";
-                wordInput.disabled = true;
-                sendBtn.disabled = true;
-                hintBtn.disabled = true;
-            } else if (words.length === 0) {
-                lastWordEl.textContent = "게임 시작!";
-                turnInfoEl.textContent = isMyTurn ? `${players[userId].nickname}님, 첫 단어를 제시해주세요!` : `${currentPlayerNickname}님이 첫 단어를 제시합니다...`;
-                wordInput.disabled = !isMyTurn;
-                sendBtn.disabled = !isMyTurn;
-                hintBtn.disabled = true;
-            } else {
-                lastWordEl.textContent = lastWord;
-                turnInfoEl.textContent = isMyTurn ? `${players[userId].nickname}님 차례입니다!` : `${currentPlayerNickname}님 차례입니다...`;
-                wordInput.disabled = !isMyTurn;
-                sendBtn.disabled = !isMyTurn;
-                hintBtn.disabled = !isMyTurn;
+            if (status === 'finished') {
+                const winnerNickname = players[winner.uid]?.nickname;
+                allDOMElements.turnInfoEl.textContent = `${winnerNickname}님의 승리! (${winner.reason})`;
+                allDOMElements.lastWordEl.textContent = "게임 종료";
+                Object.values(allDOMElements).forEach(el => { if(el.disabled !== undefined) el.disabled = true; });
+                allDOMElements.leaveRoomBtn.disabled = false;
+                return;
             }
-            if(isMyTurn) wordInput.focus();
+
+            const currentPlayerNickname = players[currentPlayerUid]?.nickname;
+            allDOMElements.forfeitBtn.disabled = false;
+            allDOMElements.resetGameBtn.disabled = false;
+            if (words.length === 0) {
+                allDOMElements.lastWordEl.textContent = "게임 시작!";
+                allDOMElements.turnInfoEl.textContent = isMyTurn ? `${players[userId].nickname}님, 첫 단어를 제시해주세요!` : `${currentPlayerNickname}님이 첫 단어를 제시합니다...`;
+            } else {
+                allDOMElements.lastWordEl.textContent = lastWord;
+                allDOMElements.turnInfoEl.textContent = isMyTurn ? `${players[userId].nickname}님 차례입니다!` : `${currentPlayerNickname}님 차례입니다...`;
+            }
+            allDOMElements.wordInput.disabled = !isMyTurn;
+            allDOMElements.sendBtn.disabled = !isMyTurn;
+            if (isMyTurn) allDOMElements.wordInput.focus();
+
+            const startTime = turnStartTime.toDate().getTime();
+            timerInterval = setInterval(async () => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const remaining = TURN_DURATION - elapsed;
+                allDOMElements.timerDisplay.textContent = remaining >= 0 ? remaining : 0;
+                if (remaining < 0 && isMyTurn) {
+                    clearInterval(timerInterval);
+                    const otherPlayers = Object.keys(players).filter(p => p !== userId);
+                    const winnerUid = otherPlayers.length >= 1 ? otherPlayers[0] : userId;
+                    await endGame(winnerUid, "시간 초과");
+                }
+            }, 1000);
         }
         
-        // --- 이벤트 리스너 ---
-        openCreateRoomModalBtn.addEventListener('click', () => createRoomModal.classList.remove('hidden'));
-        cancelCreateBtn.addEventListener('click', () => createRoomModal.classList.add('hidden'));
-        confirmCreateBtn.addEventListener('click', () => {
-            createRoom(nicknameInput.value.trim(), roomNameInput.value.trim(), passwordInput.value.trim());
-            createRoomModal.classList.add('hidden');
-        });
+        function updatePlayerList(players, turnOrder, currentPlayerUid) {
+             allDOMElements.playerList.innerHTML = '';
+            const playerIdsInTurnOrder = turnOrder && turnOrder.length > 0 ? turnOrder : Object.keys(players);
+            playerIdsInTurnOrder.forEach(pid => {
+                if (!players[pid]) return;
+                const li = document.createElement('li');
+                const isCurrent = pid === currentPlayerUid;
+                li.className = `p-2 rounded-md truncate ${isCurrent ? 'bg-blue-100 font-bold text-blue-700' : 'bg-gray-100'}`;
+                li.textContent = players[pid]?.nickname || '...';
+                allDOMElements.playerList.appendChild(li);
+            });
+        }
         
-        publicRoomsList.addEventListener('click', (e) => {
-            const roomEl = e.target.closest('[data-room-id]');
-            if (!roomEl) return;
-            
-            const { roomId, passwordProtected } = roomEl.dataset;
-            passwordModal.dataset.roomId = roomId;
-            
-            if (passwordProtected === 'true') {
-                joinNicknameInput.value = '';
-                joinPasswordInput.value = '';
-                passwordModal.classList.remove('hidden');
-            } else {
-                const nickname = prompt("사용할 닉네임을 입력하세요:");
-                if(nickname) joinRoom(roomId, nickname);
-            }
-        });
-        
-        cancelJoinBtn.addEventListener('click', () => passwordModal.classList.add('hidden'));
-        confirmJoinBtn.addEventListener('click', () => {
-            const roomId = passwordModal.dataset.roomId;
-            const nickname = joinNicknameInput.value.trim();
-            const password = joinPasswordInput.value.trim();
-            if(nickname) joinRoom(roomId, nickname, password);
-        });
-
-        leaveRoomBtn.addEventListener('click', () => leaveRoom(false));
-        
-        deleteRoomBtn.addEventListener('click', async () => {
-            if (confirm("정말로 이 방을 삭제하시겠습니까? 모든 플레이어가 로비로 이동됩니다.")) {
-                const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
-                await deleteDoc(gameDocRef);
-            }
-        });
-        
-        sendBtn.addEventListener('click', handleSendWord);
-        wordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendWord(); });
+        async function endGame(winnerUid, reason) {
+            const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
+            await updateDoc(gameDocRef, { status: 'finished', winner: { uid: winnerUid, reason: reason } });
+        }
         
         async function handleSendWord() {
-            const word = wordInput.value.trim();
+            const word = allDOMElements.wordInput.value.trim();
             if (!word || word.length < 2) return alert("두 글자 이상의 단어를 입력해주세요.");
+            allDOMElements.sendBtn.disabled = true;
 
             const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
             const gameDoc = await getDoc(gameDocRef);
 
             if (gameDoc.exists()) {
                 const gameData = gameDoc.data();
-                if (gameData.words.length > 0 && gameData.lastWord.charAt(gameData.lastWord.length - 1) !== word.charAt(0)) {
+                const { words, lastWord, turnOrder } = gameData;
+                const lastChar = lastWord.charAt(lastWord.length - 1);
+                const firstChar = word.charAt(0);
+
+                const isValidDueum = dueumMap[lastChar] === firstChar;
+                if (words.length > 0 && lastChar !== firstChar && !isValidDueum) {
+                    allDOMElements.sendBtn.disabled = false;
                     return alert("이전 단어의 마지막 글자로 시작해야 합니다.");
                 }
-                if (gameData.words.some(item => item.word === word)) {
+                if (words.some(item => item.word === word)) {
+                    allDOMElements.sendBtn.disabled = false;
                     return alert("이미 사용된 단어입니다.");
                 }
 
-                const playerIds = Object.keys(gameData.players);
-                const nextPlayerUid = playerIds.find(p => p !== userId) || userId;
+                const currentIndex = turnOrder.indexOf(userId);
+                const nextIndex = (currentIndex + 1) % turnOrder.length;
+                const nextPlayerUid = turnOrder[nextIndex];
                 
                 await updateDoc(gameDocRef, {
-                    words: [...gameData.words, { player: userId, word: word }],
+                    words: [...words, { player: userId, word: word }],
                     lastWord: word,
-                    currentPlayerUid: nextPlayerUid
+                    currentPlayerUid: nextPlayerUid,
+                    turnStartTime: serverTimestamp()
                 });
-                wordInput.value = '';
+                allDOMElements.wordInput.value = '';
             }
+            allDOMElements.sendBtn.disabled = false;
         }
+
+        allDOMElements.openCreateRoomModalBtn.addEventListener('click', () => allDOMElements.createRoomModal.classList.remove('hidden'));
+        allDOMElements.cancelCreateBtn.addEventListener('click', () => allDOMElements.createRoomModal.classList.add('hidden'));
+        allDOMElements.confirmCreateBtn.addEventListener('click', () => {
+            createRoom(
+                allDOMElements.nicknameInput.value.trim(), 
+                allDOMElements.roomNameInput.value.trim(), 
+                allDOMElements.passwordInput.value.trim(),
+                allDOMElements.maxPlayersInput.value
+            );
+            allDOMElements.createRoomModal.classList.add('hidden');
+        });
         
-        resetGameBtn.addEventListener('click', async () => {
-            if (confirm("정말로 게임을 초기화하시겠습니까? 단어 기록만 삭제됩니다.")) {
+        allDOMElements.publicRoomsList.addEventListener('click', (e) => {
+            const roomEl = e.target.closest('[data-room-id]');
+            if (!roomEl) return;
+            const { roomId, passwordProtected } = roomEl.dataset;
+            allDOMElements.passwordModal.dataset.roomId = roomId;
+            if (passwordProtected === 'true') {
+                allDOMElements.joinNicknameInput.value = '';
+                allDOMElements.joinPasswordInput.value = '';
+                allDOMElements.passwordModal.classList.remove('hidden');
+            } else {
+                const nickname = prompt("사용할 닉네임을 입력하세요:");
+                if(nickname) joinRoom(roomId, nickname);
+            }
+        });
+        
+        allDOMElements.cancelJoinBtn.addEventListener('click', () => allDOMElements.passwordModal.classList.add('hidden'));
+        allDOMElements.confirmJoinBtn.addEventListener('click', () => {
+            const roomId = allDOMElements.passwordModal.dataset.roomId;
+            const nickname = allDOMElements.joinNicknameInput.value.trim();
+            const password = allDOMElements.joinPasswordInput.value.trim();
+            if(nickname) joinRoom(roomId, nickname, password);
+        });
+
+        allDOMElements.leaveRoomBtn.addEventListener('click', () => leaveRoom(false));
+        allDOMElements.deleteRoomBtn.addEventListener('click', async () => {
+            if (confirm("정말로 이 방을 삭제하시겠습니까?")) {
+                await deleteDoc(doc(db, `artifacts/${appId}/public/data/games`, currentGameId));
+            }
+        });
+        
+        allDOMElements.wordInput.addEventListener('input', () => {
+            allDOMElements.wordInput.value = allDOMElements.wordInput.value.replace(/[^가-힣]/g, '');
+        });
+        
+        allDOMElements.sendBtn.addEventListener('click', handleSendWord);
+        allDOMElements.wordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendWord(); });
+        
+        allDOMElements.forfeitBtn.addEventListener('click', async () => {
+            if (confirm("정말로 항복하시겠습니까?")) {
+                const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
+                const gameDoc = await getDoc(gameDocRef);
+                if(gameDoc.exists()) {
+                    const otherPlayers = Object.keys(gameDoc.data().players).filter(p => p !== userId);
+                    if (otherPlayers.length > 0) {
+                        await endGame(otherPlayers[0], "항복");
+                    }
+                }
+            }
+        });
+        
+        allDOMElements.resetGameBtn.addEventListener('click', async () => {
+            if (confirm("게임을 초기화하시겠습니까?")) {
                  const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
                  const gameDoc = await getDoc(gameDocRef);
                  if(gameDoc.exists()){
+                    const gameData = gameDoc.data();
+                    const playerIds = Object.keys(gameData.players);
+                    const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
                     await updateDoc(gameDocRef, {
-                        words: [], lastWord: "", currentPlayerUid: gameDoc.data().creatorUid
+                        words: [], lastWord: "", status: 'playing',
+                        turnOrder: shuffledPlayerIds,
+                        currentPlayerUid: shuffledPlayerIds[0],
+                        turnStartTime: serverTimestamp()
                     });
                  }
+            }
+        });
+
+        allDOMElements.startGameBtn.addEventListener('click', async () => {
+            const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
+            const docSnap = await getDoc(gameDocRef);
+            if (docSnap.exists()) {
+                const gameData = docSnap.data();
+                const playerIds = Object.keys(gameData.players);
+                const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
+                await updateDoc(gameDocRef, {
+                    status: 'playing',
+                    turnOrder: shuffledPlayerIds,
+                    currentPlayerUid: shuffledPlayerIds[0],
+                    turnStartTime: serverTimestamp()
+                });
             }
         });
 
