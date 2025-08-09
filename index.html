@@ -358,18 +358,20 @@
             allDOMElements.sendBtn.disabled = !isMyTurn;
             if (isMyTurn) allDOMElements.wordInput.focus();
 
-            const startTime = turnStartTime.toDate().getTime();
-            timerInterval = setInterval(async () => {
-                const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                const remaining = TURN_DURATION - elapsed;
-                allDOMElements.timerDisplay.textContent = remaining >= 0 ? remaining : 0;
-                if (remaining < 0 && isMyTurn) {
-                    clearInterval(timerInterval);
-                    const otherPlayers = Object.keys(players).filter(p => p !== userId);
-                    const winnerUid = otherPlayers.length >= 1 ? otherPlayers[0] : userId;
-                    await endGame(winnerUid, "시간 초과");
-                }
-            }, 1000);
+            if(turnStartTime && turnStartTime.toDate) {
+                const startTime = turnStartTime.toDate().getTime();
+                timerInterval = setInterval(async () => {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    const remaining = TURN_DURATION - elapsed;
+                    allDOMElements.timerDisplay.textContent = remaining >= 0 ? remaining : 0;
+                    if (remaining < 0 && isMyTurn) {
+                        clearInterval(timerInterval);
+                        const otherPlayers = Object.keys(players).filter(p => p !== userId);
+                        const winnerUid = otherPlayers.length >= 1 ? otherPlayers[0] : userId;
+                        await endGame(winnerUid, "시간 초과");
+                    }
+                }, 1000);
+            }
         }
         
         function updatePlayerList(players, turnOrder, currentPlayerUid) {
