@@ -342,15 +342,16 @@
                 allDOMElements.wordInput.disabled = true;
                 allDOMElements.sendBtn.disabled = true;
                 allDOMElements.forfeitBtn.disabled = true;
-                allDOMElements.resetGameBtn.disabled = !(creatorUid === userId); // 방장만 다시하기 활성화
+                allDOMElements.resetGameBtn.disabled = !(creatorUid === userId);
                 allDOMElements.resetGameBtn.textContent = "다시 하기";
                 return;
             }
 
             const currentPlayerNickname = players[currentPlayerUid]?.nickname;
             allDOMElements.forfeitBtn.disabled = false;
-            allDOMElements.resetGameBtn.disabled = true; // 게임 중에는 초기화 비활성화
             allDOMElements.resetGameBtn.textContent = "게임 초기화";
+            allDOMElements.resetGameBtn.disabled = !(creatorUid === userId);
+
 
             if (words.length === 0) {
                 allDOMElements.lastWordEl.textContent = "게임 시작!";
@@ -523,9 +524,7 @@
             if(gameDoc.exists()){
                 const gameData = gameDoc.data();
                 if (gameData.creatorUid !== userId) return alert("방장만 게임을 다시 시작할 수 있습니다.");
-                if (gameData.status !== 'finished') {
-                    if (!confirm("게임이 진행중입니다. 정말로 초기화하시겠습니까?")) return;
-                }
+                
                 const playerIds = Object.keys(gameData.players);
                 const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
                 await updateDoc(gameDocRef, {
