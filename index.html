@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>실시간 끝말잇기 게임</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter & Noto Sans KR -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -26,7 +24,6 @@
             <p class="text-xl text-gray-600">연결 중입니다...</p>
         </div>
 
-        <!-- 로비 화면 -->
         <div id="lobby-screen" class="hidden p-6 md:p-8 flex flex-col h-full">
             <div class="flex-shrink-0 mb-4">
                 <h1 class="text-3xl font-bold text-center text-gray-800">게임 로비 🎮</h1>
@@ -40,9 +37,7 @@
             </div>
         </div>
 
-        <!-- 게임 화면 -->
         <div id="game-screen" class="hidden flex-1 flex flex-col p-4 space-y-4 min-h-0">
-            <!-- 상단 정보 -->
             <div class="flex-shrink-0 space-y-4">
                 <div class="flex justify-between items-center">
                     <button id="leave-room-btn" class="text-sm text-gray-500 hover:text-gray-800">← 로비로 돌아가기</button>
@@ -82,8 +77,7 @@
         </div>
     </div>
 
-    <!-- 모달 -->
-    <div id="create-room-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+    <div id="create-room-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md space-y-4">
             <h2 class="text-2xl font-bold">새 방 만들기</h2>
             <input type="text" id="nickname-input" placeholder="닉네임" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
@@ -99,7 +93,7 @@
             </div>
         </div>
     </div>
-    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4">
+    <div id="password-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
         <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md space-y-4">
             <h2 class="text-2xl font-bold">비밀번호 입력</h2>
             <input type="text" id="join-nickname-input" placeholder="닉네임" class="w-full px-4 py-3 border rounded-lg" autocomplete="off">
@@ -147,7 +141,7 @@
         let unsubscribeGame = null, unsubscribeRooms = null, timerInterval = null;
 
         const TURN_DURATION = 30;
-        const dueumMap = { '라': '나', '락': '낙', '란': '난', '랄': '날', '람': '남', '랍': '납', '랑': '낭', '래': '내', '랭': '냉', '량': '양', '려': '여', '력': '역', '련': '연', '렬': '열', '렴': '염', '렵': '엽', '령': '영', '례': '예', '로': '노', '록': '녹', '론': '논', '롱': '농', '뢰': '뇌', '료': '요', '룡': '용', '루': '누', '뉴': '유', '니': '이', '녀': '여', '뇨': '요', '뉴': '유', '니': '이' };
+        const dueumMap = { '라': '나', '락': '낙', '란': '난', '랄': '날', '람': '남', '랍': '납', '랑': '낭', '래': '내', '랭': '냉', '량': '양', '려': '여', '력': '역', '련': '연', '렬': '열', '렴': '염', '렵': '엽', '령': '영', '례': '예', '로': '노', '록': '녹', '론': '논', '롱': '농', '뢰': '뇌', '료': '요', '룡': '용', '루': '누', '뉴': '유', '니': '이', '녀': '여', '뇨': '요' };
 
         async function main() {
             try {
@@ -186,17 +180,17 @@
                 if (querySnapshot.empty) {
                     allDOMElements.publicRoomsList.innerHTML = `<p class="text-gray-500 text-center">참여할 수 있는 방이 없습니다.</p>`;
                 }
-                querySnapshot.forEach((doc) => {
-                    const room = doc.data();
+                querySnapshot.forEach((docSnap) => {
+                    const room = docSnap.data();
                     const roomEl = document.createElement('div');
                     roomEl.className = 'p-4 bg-white rounded-lg shadow flex justify-between items-center cursor-pointer hover:bg-gray-50';
-                    roomEl.dataset.roomId = doc.id;
+                    roomEl.dataset.roomId = docSnap.id;
                     roomEl.dataset.passwordProtected = !!room.password;
                     
                     roomEl.innerHTML = `
                         <div>
-                            <p class="font-bold text-lg">${doc.id}</p>
-                            <p class="text-sm text-gray-600">${Object.keys(room.players).length} / ${room.maxPlayers} 명</p>
+                            <p class="font-bold text-lg">${docSnap.id}</p>
+                            <p class="text-sm text-gray-600">${Object.keys(room.players || {}).length} / ${room.maxPlayers} 명</p>
                         </div>
                         ${room.password ? '<span>🔒</span>' : ''}
                     `;
@@ -227,14 +221,14 @@
             const gameData = docSnap.data();
             if (gameData.password && gameData.password !== passwordAttempt) return alert("비밀번호가 틀렸습니다.");
             
-            const playerCount = Object.keys(gameData.players).length;
+            const playerCount = Object.keys(gameData.players || {}).length;
             if (playerCount >= gameData.maxPlayers && !gameData.players[userId]) return alert("방이 가득 찼습니다.");
             
             const updateData = { [`players.${userId}`]: { nickname } };
-            const newPlayerCount = playerCount + 1;
+            const newPlayerCount = playerCount + (gameData.players[userId] ? 0 : 1);
 
             if (newPlayerCount === gameData.maxPlayers) {
-                const playerIds = [...Object.keys(gameData.players), userId];
+                const playerIds = [...Object.keys(gameData.players || {}), userId];
                 const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
                 updateData.status = 'playing';
                 updateData.turnOrder = shuffledPlayerIds;
@@ -264,7 +258,7 @@
             if (unsubscribeGame) unsubscribeGame();
             unsubscribeGame = null;
             currentGameId = null;
-            if (timerInterval) clearInterval(timerInterval);
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
             
             if (roomId && !isKicked) {
                 try {
@@ -272,22 +266,40 @@
                     const docSnap = await getDoc(gameDocRef);
                     if (docSnap.exists()) {
                         const gameData = docSnap.data();
-                        const { players, turnOrder, creatorUid, currentPlayerUid } = gameData;
+                        const players = { ...(gameData.players || {}) };
+                        const turnOrder = gameData.turnOrder || [];
+                        const creatorUid = gameData.creatorUid;
+                        const currentPlayerUid = gameData.currentPlayerUid;
                         const leavingPlayerIndex = turnOrder.indexOf(userId);
                         
+                        // 1) 플레이어 제거
                         delete players[userId];
                         const newTurnOrder = turnOrder.filter(p => p !== userId);
 
+                        // 2) 방에 아무도 없으면 삭제
                         if (Object.keys(players).length === 0) {
                             await deleteDoc(gameDocRef);
                         } else {
+                            // 3) 다음 턴자 결정: 만약 떠나는 사람이 현재 턴이면 다음 사람으로 옮김
                             let nextPlayerUid = currentPlayerUid;
-                            if (currentPlayerUid === userId && newTurnOrder.length > 0) {
-                                nextPlayerUid = newTurnOrder[leavingPlayerIndex % newTurnOrder.length];
+                            if (currentPlayerUid === userId) {
+                                if (newTurnOrder.length > 0) {
+                                    nextPlayerUid = newTurnOrder[leavingPlayerIndex % newTurnOrder.length];
+                                } else {
+                                    nextPlayerUid = Object.keys(players)[0];
+                                }
                             }
+
+                            // 4) 방장 떠남 처리: 방장 uid를 새 플레이어로 지정 (간단하게 첫 플레이어)
+                            let newCreator = creatorUid;
+                            if (creatorUid === userId) {
+                                newCreator = Object.keys(players)[0];
+                            }
+
                             await updateDoc(gameDocRef, { 
                                 players, 
                                 turnOrder: newTurnOrder,
+                                creatorUid: newCreator,
                                 status: 'waiting', 
                                 words: [], 
                                 lastWord: "", 
@@ -302,7 +314,7 @@
 
         function updateUI(gameData) {
             if (!gameData) return;
-            const { players, currentPlayerUid, words, lastWord, status, creatorUid, turnOrder, turnStartTime, winner, maxPlayers } = gameData;
+            const { players = {}, currentPlayerUid, words = [], lastWord = "", status, creatorUid, turnOrder = [], turnStartTime, winner, maxPlayers } = gameData;
             
             allDOMElements.deleteRoomBtn.classList.toggle('hidden', creatorUid !== userId);
             updatePlayerList(players, turnOrder, currentPlayerUid);
@@ -333,7 +345,7 @@
             });
             allDOMElements.wordListEl.scrollTop = allDOMElements.wordListEl.scrollHeight;
             
-            if (timerInterval) clearInterval(timerInterval);
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
 
             if (status === 'finished') {
                 const winnerNickname = players[winner.uid]?.nickname;
@@ -349,9 +361,8 @@
 
             const currentPlayerNickname = players[currentPlayerUid]?.nickname;
             allDOMElements.forfeitBtn.disabled = false;
+            allDOMElements.resetGameBtn.disabled = true;
             allDOMElements.resetGameBtn.textContent = "게임 초기화";
-            allDOMElements.resetGameBtn.disabled = !(creatorUid === userId);
-
 
             if (words.length === 0) {
                 allDOMElements.lastWordEl.textContent = "게임 시작!";
@@ -362,7 +373,12 @@
             }
             allDOMElements.wordInput.disabled = !isMyTurn;
             allDOMElements.sendBtn.disabled = !isMyTurn;
-            if (isMyTurn) allDOMElements.wordInput.focus();
+            if (isMyTurn) {
+                // 포커스 시도 (비활성화 상태가 아닐 때만)
+                setTimeout(() => { 
+                    try { allDOMElements.wordInput.focus(); } catch(e) { /* ignore */ } 
+                }, 50);
+            }
 
             if(turnStartTime && turnStartTime.toDate) {
                 const startTime = turnStartTime.toDate().getTime();
@@ -408,7 +424,7 @@
 
             if (gameDoc.exists()) {
                 const gameData = gameDoc.data();
-                const { words, lastWord, turnOrder } = gameData;
+                const { words = [], lastWord = "", turnOrder = [] } = gameData;
                 const lastChar = lastWord.charAt(lastWord.length - 1);
                 const firstChar = word.charAt(0);
 
@@ -442,19 +458,29 @@
             allDOMElements.sendBtn.disabled = false;
         }
 
+        // (주의) 실제 배포 시에는 API 키를 안전하게 관리하세요.
         async function isRealWord(word) {
-            const prompt = `'${word}'가 표준국어대사전에 등재된 한글 명사가 맞는지 '예' 또는 '아니오'로만 대답해줘.`;
-            const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
-            const apiKey = "";
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            try {
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) return true;
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                return text && text.includes('예');
-            } catch (error) { console.error("Word validation error:", error); return true; }
+            // 외부 API 사용 부분은 임시로 true를 반환하도록 두었습니다.
+            // 실제로 표준국어대사전 등과 연동하려면 서버 측에서 API 호출을 구현하세요.
+            return true;
         }
+
+        // --- IME 조합 문제 해결: composition 이벤트 처리 ---
+        (function setupCompositionSafeInput() {
+            const input = allDOMElements.wordInput;
+            let composing = false;
+            input.addEventListener('compositionstart', () => { composing = true; });
+            input.addEventListener('compositionend', (e) => {
+                composing = false;
+                // 조합이 끝난 뒤 필터링 적용 (한글과 공백만 허용)
+                e.target.value = e.target.value.replace(/[^가-힣\s]/g, '');
+            });
+            input.addEventListener('input', (e) => {
+                // 조합 중이면 필터링을 적용하지 않음 -> IME 입력이 정상적으로 보임
+                if (composing) return;
+                e.target.value = e.target.value.replace(/[^가-힣\s]/g, '');
+            });
+        })();
 
         allDOMElements.openCreateRoomModalBtn.addEventListener('click', () => allDOMElements.createRoomModal.classList.remove('hidden'));
         allDOMElements.cancelCreateBtn.addEventListener('click', () => allDOMElements.createRoomModal.classList.add('hidden'));
@@ -498,10 +524,6 @@
             }
         });
         
-        allDOMElements.wordInput.addEventListener('input', () => {
-            allDOMElements.wordInput.value = allDOMElements.wordInput.value.replace(/[^가-힣]/g, '');
-        });
-        
         allDOMElements.sendBtn.addEventListener('click', handleSendWord);
         allDOMElements.wordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSendWord(); });
         
@@ -510,7 +532,7 @@
                 const gameDocRef = doc(db, `artifacts/${appId}/public/data/games`, currentGameId);
                 const gameDoc = await getDoc(gameDocRef);
                 if(gameDoc.exists()) {
-                    const otherPlayers = Object.keys(gameDoc.data().players).filter(p => p !== userId);
+                    const otherPlayers = Object.keys(gameDoc.data().players || {}).filter(p => p !== userId);
                     if (otherPlayers.length > 0) {
                         await endGame(otherPlayers[0], "항복");
                     }
@@ -524,8 +546,10 @@
             if(gameDoc.exists()){
                 const gameData = gameDoc.data();
                 if (gameData.creatorUid !== userId) return alert("방장만 게임을 다시 시작할 수 있습니다.");
-                
-                const playerIds = Object.keys(gameData.players);
+                if (gameData.status !== 'finished') {
+                    if (!confirm("게임이 진행중입니다. 정말로 초기화하시겠습니까?")) return;
+                }
+                const playerIds = Object.keys(gameData.players || {});
                 const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
                 await updateDoc(gameDocRef, {
                     words: [], lastWord: "", status: 'playing',
@@ -542,7 +566,7 @@
             const docSnap = await getDoc(gameDocRef);
             if (docSnap.exists()) {
                 const gameData = docSnap.data();
-                const playerIds = Object.keys(gameData.players);
+                const playerIds = Object.keys(gameData.players || {});
                 const shuffledPlayerIds = playerIds.sort(() => Math.random() - 0.5);
                 await updateDoc(gameDocRef, {
                     status: 'playing',
