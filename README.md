@@ -1,5 +1,5 @@
 ## 사이트 주소 : https://xbelugazx.github.io/word-chain-game/
-(수정중)
+(Doesn't work yet)
 
 
 # 🎮 실시간 끝말잇기 게임 (Real-time Word Chain Game)
